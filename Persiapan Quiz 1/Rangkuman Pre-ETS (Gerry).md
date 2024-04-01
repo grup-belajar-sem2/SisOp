@@ -14,6 +14,7 @@
     - [Sequential Interrupt Programming](#sequential-interrupt-programming)
     - [Nested Interrupt Programming](#nested-interrupt-programming)
   - [Multiple Interrupt](#multiple-interrupt)
+    - [Prioritas](#prioritas)
 # PPT 1
 ## Basic Element 
 - Processor
@@ -121,7 +122,6 @@ lol ini copilot yg bikin (i fucking love copilot)
    3. kembaliin kondisi informasi
    4. kembaliin PSW ama PC yg ada di control stack sebelumnya
 ### Sequential Interrupt Programming
-Flow:
 1. Process beroperasi
 2. Interruption muncul
 3. Pertama dihandle oleh `Interruption Handler X`
@@ -138,3 +138,17 @@ Flow:
 6. IHX selesai, kembali ke process
 7. process berjalan lagi
 ## Multiple Interrupt
+### Prioritas
+Di dalam contoh berikut ini, kita pakai kprioritas buat jelasin hierarki kepentingan interrupt
+cuma perlu di note aja klo prioritas itu angka yg lebih kecil
+<br/>
+misalkan:
+- process A (pA) memiliki interrupt prioritas 5
+- process B (pB) memiliki interrupt prioritas 4
+- process C (pC) memiliki interrupt prioritas 2
+
+1. pA, pB, pC beroperasi
+2. pA muncul interrupt prioritas 5
+3. pA dihandle oleh IHX (Interruption Handler X)
+4. Selama IHX lagi jalan, pB muncul interrupt prioritas 4
+5. karena pB 
