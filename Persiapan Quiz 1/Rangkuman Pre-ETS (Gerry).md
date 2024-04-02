@@ -15,6 +15,8 @@
     - [Nested Interrupt Programming](#nested-interrupt-programming)
   - [Multiple Interrupt](#multiple-interrupt)
     - [Prioritas](#prioritas)
+  - [Multiprogramming](#multiprogramming)
+  - [Memory Hierarchy](#memory-hierarchy)
 # PPT 1
 ## Basic Element 
 - Processor
@@ -74,7 +76,8 @@ Ada dua:
   3. Loop or Halt
     - loop klo ada instruksri berikutnya
     - halt klo udah selesai
-  
+<br/><br/>
+![Instruction Execution](./resources/simple-instruction-cycle.png)
 ## Interupts
 - interupt itu cuma signal berhenti (SIGINT) sementara yang dipake buat ngasi tau processor klo ada event yang lebih penting
 - Fact: I/O itu mayoritas lebih pelan kerjanya dibanding ama processor
@@ -106,6 +109,8 @@ Ada dua:
    - interrupt disabled
      - back to fetch
 3. loop from fetch, unless process done (halt)
+<br/><br/>
+![Instruction Execution/Flow with Interrupt](./resources/instruction-cycle-with-interrupt.png)
 ## Interrupt Processing
 ### Simple Interrupt Processing
 note: ini gw copas dari ppt nya, `jadi mungkin ada beberapa kata yang gk gw pahami`
@@ -129,6 +134,8 @@ lol ini copilot yg bikin (i fucking love copilot)
 5. Selesai IHX, dilanjutkan oleh `Interruption Handler Y` (mereka bekerja pas after one another, gaada break)
 6. IHY return/selesai handle interrupt
 7. Selesai IHY, process berjalan lagi
+<br/><br/>
+![Sequential Interrupt Programming](./resources/sequential-interrupt_handle.png)
 ### Nested Interrupt Programming
 1. Process beroperasi
 2. Interruption muncul
@@ -137,6 +144,8 @@ lol ini copilot yg bikin (i fucking love copilot)
 5. IHY selesai, kembali ke IHX
 6. IHX selesai, kembali ke process
 7. process berjalan lagi
+<br/><br/>
+![Nested Interrupt Programming](./resources/nested-interrupt-handle.png)
 ## Multiple Interrupt
 ### Prioritas
 Di dalam contoh berikut ini, kita pakai kprioritas buat jelasin hierarki kepentingan interrupt
@@ -151,4 +160,41 @@ misalkan:
 2. pA muncul interrupt prioritas 5
 3. pA dihandle oleh IHX (Interruption Handler X)
 4. Selama IHX lagi jalan, pB muncul interrupt prioritas 4
-5. karena pB 
+5. karena prioritas pB lebih tinggi dari pA, IHX di suspend dan pB dihandle oleh IHY terlebih dahulu
+6. Selama IHY lagi jalan, pC muncul interrupt prioritas 2
+7. karena prioritas pC lebih tinggi dari pB, IHY di suspend dan pC dihandle oleh IHZ terlebih dahulu
+8. IHZ selesai, jadi IHY di unsuspended
+9. IHY selesai, jadi IHX di unsuspended
+10. IHX selesai, process berjalan lagi
+
+## Multiprogramming
+- Multiprogramming itu konsep processor memiliki lebih dari 1 program buat di execute sekaligus
+- Sequence/urutan dari program mana yang harus diexecute itu berdasarkan [Prioritas](#prioritas) relatif mereka dan berdasarkan apakah mereka menggunakan I/O atau tidak
+  - klo program A menggunakan I/O, dan program B gk, maka program B akan di execute terlebih dahulu
+- Dalam multiprogramming, klo sebuah interrupt handler selesai, bisa aja handler nya return ke program lain (maksud program lain itu program yg bkn lagi di execute atau program yang bkn merupakan sumber interrupt)
+
+## Memory Hierarchy
+Memory pada dasarnya memiliki 3 atribut yg ngefek performance
+- capacity
+  - se brp banyak data 1 memory block bisa simpen
+- access time
+  - seberapa cepat data bisa di akses dari memory block
+- cost
+  - sebuah data di dalam sebuah memory block itu perlu brp banyak bit buat di simpen
+
+Dari atribut ini, kita cuma bisa pilih min-max options :
+1. Faster access time, greater cost per bit
+  - contoh: Cache (capacity kecil, access time cepat, cost mahal)
+2. Greater capacity, smaller cost per bit
+  - contoh: RAM (capacity besar, access time relatif lambat, cost murah)
+3. Greater capacity, slower access speed
+  - contoh: HDD (hard disk) (kapasitas besar banget, access time lambat banget, cost murah)
+
+![Memory Hierarchy](./resources/memory-hierarchy.png)
+dari gambar diatas itu klo diperhatiin :
+1. semakin ke bawah, cost per bit semakin murah
+2. semakin ke bawah, capacity lebih besar
+3. semakin ke bawah, access time nya lebih lama
+4. Klo diperhatiin, itu jg semakin ke bawah, data-data yang biasanya di bawah hiearki itu lebih jarang dipanggil/kepake ama processor dibanding ama data-data di cache/atas hiearki
+<br/><br/>
+Bisa dibayangin di atas semua hiearki ini, ada processor dan processor panggil data di memory dari atas, jadi klo cache yg paling deket ama processor, bisa disimpulkan bahwa capacity nya kecil, access time nya cepet banget, dan cost nya mahal.
