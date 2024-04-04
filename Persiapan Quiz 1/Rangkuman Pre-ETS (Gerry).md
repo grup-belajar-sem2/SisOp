@@ -17,6 +17,15 @@
     - [Prioritas](#prioritas)
   - [Multiprogramming](#multiprogramming)
   - [Memory Hierarchy](#memory-hierarchy)
+  - [Struktur Cache dan Main Memory](#struktur-cache-dan-main-memory)
+  - [Prinsip Cache](#prinsip-cache)
+    - [Cara Cache Beroperasi](#cara-cache-beroperasi)
+  - [Teknik Komunikasi I/O](#teknik-komunikasi-io)
+    - [Programmed I/O](#programmed-io)
+    - [Interrupt-Driven I/O](#interrupt-driven-io)
+  - [Footnote](#footnote)
+    - [Spatial Locality](#spatial-locality)
+    - [temporal locality](#temporal-locality)
 # PPT 1
 ## Basic Element 
 - Processor
@@ -198,3 +207,73 @@ dari gambar diatas itu klo diperhatiin :
 4. Klo diperhatiin, itu jg semakin ke bawah, data-data yang biasanya di bawah hiearki itu lebih jarang dipanggil/kepake ama processor dibanding ama data-data di cache/atas hiearki
 <br/><br/>
 Bisa dibayangin di atas semua hiearki ini, ada processor dan processor panggil data di memory dari atas, jadi klo cache yg paling deket ama processor, bisa disimpulkan bahwa capacity nya kecil, access time nya cepet banget, dan cost nya mahal.
+
+## Struktur Cache dan Main Memory
+![Struktur cache](./resources/cache-structure.png)
+Tag merupakan semacam label/prefix untuk instant query block nya. jadi ketika processor mencari sebuah data, processor mencari dari tag
+  - klo ketemu (tag hit), maka cache cuma perlu return block dari tag nya
+  - klo gk ketemu (tag miss), maka cache jg perlu nge call lagi ke main memory buat ambil block nya tapi tag nya disimpe ke dlm cache jadi next time selalu tag hit.
+
+![Struktur main memory](./resources/main-memory-structure.png)
+main memory intinya itu setor words (data) ke dalam block (memory block) dan setiap block itu punya address nya sendiri yg unique. jadi ketika processor nge call cache yg ngne call main memory untuk akses data, processor nge akses block nya bukan langsung data nya
+
+## Prinsip Cache
+- Cache mengandung sebuah porsi/sebagian dari main memory
+- tiap kali processor mo akses memory, processor nge cek cache terlebih dahulu
+  - klo ketemu, gk perlu call ke main memory
+  - klo gk ketemu, data dipanggil dari main memory ke cache
+    - data yang barusan dipanggil akan disimpen ke cache dan untuk future use case jadi gk perlu lagi panggil dari main memory
+  - pokoknya after dipanggil data nya, pasti data reference nya ada di dalam cache after operation call nya
+- cache sekecil-kecilnya, itu impactful ama penting banget buat performance
+- jumlah data/word yg ke tuker diantara main memory ama cache itu depends entirely ke block size
+  - block size yg lebih besar bisa bikin tag hit lebih sering terjadi sampai probabilitas
+    - akan tetapi semakin besar size nya --> semakin banyak word yg masuk ke dalam cache --> semakin besar kemungkinan klo semua word yg di dlm block itu gk pake (redundant word yg masuk ke dalam cache) (perlu diinget tapi ada nya prinsip [spatial locality](#spatial-locality) dan [temporal locality](#temporal-locality))
+- penentuan cache bakal setor block dmn
+  - ketika sebuah block dibaca ke dalam cache, block lain harus di replace (inget block size itu universal, semua block size nya sama), harus ada algoritma buat nge cek block mana yg bakal dipake in the near future
+  - semakin flexible algoritma mapping (alokasi block di address), semakin complex block-searching algorithm yg perlu dibikin
+- block-replacement algorithm
+  - Least-recently-used (LRU) algorithm
+  - First in first out (FIFO) algorithm
+  - least frequently used (LFU) algorithm
+- prinsip cache untuk write block
+  - bisa terjadi tiap kali ada block di cache yg di updated
+  - bisa terjadi tiap kali block di dalam cache itu di replace
+  -  block yg di update di dalam cache itu gk di sync ke main memory immediately until block nya di replace
+### Cara Cache Beroperasi
+1. Processor minta sebuah word dari cache
+2. Cache cek apakah word nya ada di cache nya sendiri
+   - klo ada, cache nge fetch word dari storage sendiri, lanjut ke 6.
+   - klo gaada, cache nge call main memory untuk fetch wordnya, lanjut ke 3.
+3. cache allocate space buat masukin word ke dalam cache nya
+4. main memory kasi block of word ke cache
+5. cache masukin block nya ke dalam storage 
+6. cache return word nya ke processor
+
+## Teknik Komunikasi I/O
+### Programmed I/O
+Note: kelemahan dari metode ini itu processor harus nge loop terus menerus buat nge cek apakah I/O module nya udah siap atau belum + nge cek apakah operasi I/O nya udah selesai atau belum. Jadi processor kerja ngerjain task yang kurang kerjaan.
+
+1. Processor nge call I/O module
+2. baca status I/O module
+   - klo I/O module blom siap, nge loop check ampe udh siap
+3. pas I/O udh siap, baca word dari I/O module.
+4. write word ke main memory.
+5. cek apakah operasi semuanya udh selesai?
+   - klo blom, loop ke 2
+
+### Interrupt-Driven I/O
+1. I/O module kasi signal (interrupt) ke processor klo I/O module nya udah siap (processor kerjain yg lain jadi gk cek I/O module udh siap blom)
+2. check status abis dari interrupt (signal) apakah I/O module sesungguhnya sudah siap
+   - klo ternyata blom siap tapi I/O module sudah kirim interrupt tadi, error condition
+3. processor nge call baca dari I/O module
+4. write word ke main memory
+5. processor nge ceck apakah operasi I/O nya udah selesai
+   - klo blom, processor kasi signal ke I/O module buat siap-siap lagi, setelah kasi signal, processor kerjain yg lain
+   - selagi processor kerjain yg lain, processor nunggu kedatangan interrupt dari I/O module lagi
+## Footnote
+### Spatial Locality
+  - data yang di akses oleh processor itu biasanya berdekatan satu sama lain
+  - jadi ketika sebuah word di akses, ada kemungkinan besar word lain yg berdekatan dengan word di akses itu juga bakal ikut kepake in the near future
+### temporal locality
+  - data yang di akses oleh processor itu biasanya di akses lagi di waktu yang dekat
+  - jadi ketika sebuah word di akses, ada kemungkinan besar word yg sama bakal di akses lagi di waktu yang dekat
