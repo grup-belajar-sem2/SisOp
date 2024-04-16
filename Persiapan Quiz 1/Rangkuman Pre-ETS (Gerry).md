@@ -1,3 +1,5 @@
+<!-- gw pen bat mati ajg -->
+<!-- ini nge rangkum ass banget sumpah -->
 # Table of Content
 - [Table of Content](#table-of-content)
 - [PPT 1](#ppt-1)
@@ -26,6 +28,27 @@
   - [Footnote](#footnote)
     - [Spatial Locality](#spatial-locality)
     - [temporal locality](#temporal-locality)
+- [PPT 2](#ppt-2)
+    - [Requirements to be an Operating System](#requirements-to-be-an-operating-system)
+    - [Cara OS manage eksekusi aplikasi](#cara-os-manage-eksekusi-aplikasi)
+  - [Process](#process)
+    - [Apa itu process](#apa-itu-process)
+    - [Process itu terdiri dari apa](#process-itu-terdiri-dari-apa)
+    - [Trace dari proses](#trace-dari-proses)
+    - [Eksekusi program menggunakann dispatcher](#eksekusi-program-menggunakann-dispatcher)
+  - [State Process](#state-process)
+    - [Two-State Process Model](#two-state-process-model)
+    - [Process Creation and Termination Causes](#process-creation-and-termination-causes)
+      - [Process Creation](#process-creation)
+      - [Process Termination](#process-termination)
+    - [Five-State Process Model](#five-state-process-model)
+    - [Data Structure in Process Managing](#data-structure-in-process-managing)
+      - [Two Queue](#two-queue)
+      - [Multiple Queue](#multiple-queue)
+    - [Suspend States](#suspend-states)
+      - [One Suspend State](#one-suspend-state)
+      - [Two Suspend State](#two-suspend-state)
+      - [Reasons for Suspend State](#reasons-for-suspend-state)
 # PPT 1
 ## Basic Element 
 - Processor
@@ -277,3 +300,149 @@ Note: kelemahan dari metode ini itu processor harus nge loop terus menerus buat 
 ### temporal locality
   - data yang di akses oleh processor itu biasanya di akses lagi di waktu yang dekat
   - jadi ketika sebuah word di akses, ada kemungkinan besar word yg sama bakal di akses lagi di waktu yang dekat
+
+# PPT 2
+### Requirements to be an Operating System
+- bisa menyisipkan eksekusi dari be brp proses
+- menyediakan/allocate resources/sumber daya ke proses dan mennjaga resource dari proses lain
+- membolehkan proses untuk salinng bertukar informasi
+- membolehkan proses untuk saling sinkronisasi
+### Cara OS manage eksekusi aplikasi
+1. resources komputer dibikin available ke banyak program
+2. processor (cpu) itu dituker-tuker turn buat pake nya oleh banyak program
+3. dari sini OS, bisa ngatur supaya processor ama I/O devices bisa dipake secara efisien
+## Process
+### Apa itu process
+Banyak definisi :
+- sebuah program yang sedang berjalan
+- program yang sedang berjalan sekali (bisa program yang sama dijalankan barengan jadi itu terhitung 2 process)
+- sebuah objek/entitas yang bisa dieksekusikan di dalam sebuah processor
+- Sebuah set kegiatan kerja yang di-characterize dari eksekusi set instruksi, sebuah state/status, dan yang berhubungan dengan dengan sebuah set dari instruksi sistem
+### Process itu terdiri dari apa
+Main struktur process itu terdiri dari dua hal :
+1. code program (yang mungkin bisa di share diantara proses)
+2. data (informasi di dalam process)
+Tapi di dalam process mereka jg ada semacam metadata/tags yang define process nya antara lain :
+- identifier (id)
+- state/status (running kah? suspend kah? dll)
+- priority (priority kek 2, 4, 5, nge cek yg mana yg lebih penting buat di kerjakan)
+- program counter (buat nge cek ini sudah di instruksi mana di dalam proses/program nya)
+- memory pointer (lanjutan dari program counter, program counter hitung kita sudah di instruksi-i, memory pointer fetch instruksi-i dan dibaca dari memory pointer)
+- context data (?) (mungkin buat nge cek apa aja yg udah di lakuin oleh process)
+- I/O status information (?) (mungkin buat nge cek apakah I/O nya udah selesai ato belum)
+- Accounting information (?) (mungkin buat nge track berapa lama proses berjalan, berapa banyak memory yg di pakai, dll)
+
+Ini semua digabunng menjadi satu menjadi sebuah `Process Control Block`
+Process control block itu bisa dibikin aama diatur oleh OS
+Process control block bisa memiliki lebih dari satu proses
+
+![process-control-block](./resources/process-control-block.png)
+
+### Trace dari proses
+- cara kerja dan kerja sebuah proses itu direkam lewat sebuah list yang mengandung sequence dari instruksi proses nya yang sudah di jalankan
+- list ini disebut sebuah trace
+- Dispatcher itu sebuah program kecil di dalam processor yang nge lakuin task switching process
+  - dispatcher itu penting soalnya itu yg determine di dalam trace itu instruksi terakhir itu apa sebelum process nya di switch
+### Eksekusi program menggunakann dispatcher
+dispatcher nge switch process pake yg namanya timeout, jadi klo process nya udah selesai/sebaiknya diganti, dispatcher nge switch ke process lain
+![dispatcher](./resources/dispatcher.png)
+
+perhatikan di gambar itu dispatcher liat trace dari progres A untuk lanjutin process dari start timeout nya
+## State Process
+### Two-State Process Model
+process cuma punya dua state pada inti dasarnya :
+- running
+- not running
+  - bisa jadi process nya lagi di suspend
+  - bisa jadi process nya lagi di wait
+  - bisa jadi process nya lagi di ready
+  - bisa jadi process nya lagi di terminate
+  - pokoknya pause nya bisa berasal dari banyak hal
+![two-state-process-model](./resources/two-state-process-model.png)
+
+### Process Creation and Termination Causes
+| Creation | Termination |
+|----------|-------------|
+| batch (shell) job baru | complete ampe end of job |
+| interactive login (login ke user) | memory unavailable (bisa aja user minta shutdown-->normal, tapi juga bisa klo memory unavailable laptop mati user session) |
+| proses yang dibikin ama OS buat akomodasi/provide service | protection error (process gk punya permission untuk akses sebuah file)|
+| process yang dibikin dari process lain | Operator or OS Intervention (OS nya yang tentuin klo ini process sudah waktunya buat di terminate) |
+
+#### Process Creation 
+OS urusin semua process (OS ada bikin data structure buat manage process), tapi gk cuma OS doang yang bisa bikin process baru <br/>
+
+Sebuah proses bisa bikin proses baru yang namanya **Proses Spawning**
+
+dlm process spawning ada dua term :
+- Parent process : process yang bikin process baru
+- Child process : process baru yang dibikin ama parent process
+
+#### Process Termination
+Memento mori (sebuah process yang dicreate pasti ada terminationnya)
+yang terminate bisa berasal dari banyak sumber :
+- instruksi HALT yang bikin signal interrupt ke OS
+- user request/action (logging off, alt+f4, ctrl+c)
+- process error/fault
+- parent process nge call buat termination process nya
+### Five-State Process Model
+1. New
+   - process baru yang dibikin
+2. Ready
+   - process yang siap buat di execute
+   - process sudah siap dijalankan cuma perlu giliran yang dikasih ama dispatcher
+3. Running
+   - process yang lagi di execute
+   - timeout adalah penentu kapan process ini harus di switch dari dispatcher
+   - klo process mo nunggu for something, daripada nunggu di processor, processor kirim process nya ke blocked state aja daripada resources processor dipake buat nungguin process yang gk kerja
+4. Blocked
+   - process yang lagi nunggu event
+   - penentu kapan process ini harus di suspend untuk nunggu sebuah event (mungkin nunggu I/O device dll). 
+   - setelah event selesai, process balik ke ready state 
+   - proses balik ke ready state soalnya pas process lagi di blocked state, dispatcher switch ke process lain buat kerja, jadi pas process yg di blocked selesai, dia mesti tunggu giliran lagi dari dispatcher
+5. Exit
+   - process udh selesai jadi termination
+   - memento mori, semua program pasti ada terminantion nya
+
+![five-state-process-model](./resources/five-state-process-model.png)
+
+### Data Structure in Process Managing
+#### Two Queue
+![two-queue-process-block-system](./resources/two-queue-block-system.png)
+disini cuma 2 queue dipake :
+- ready queue
+  - assuming dispatcher cuma pake prinsip FIFO buat scheduling programnya
+- blocked queue
+  - universal blocked queue, semua process yg tunggu event masuk ke dalam queue ini (gk peduli event yg beda, yg penting process nya lagi nunggu event jadi masuk ke queue ini)
+  - bisa dinalarin klo metode ini jg masih kurang efektif soalnya bisa aja 1 event udh selesai, tapi gara" prinsip FIFO, process nya gk bisa keluar dari blocked queue.
+#### Multiple Queue
+![multiple-queue-process-block-system](./resources/multiple-queue-block-system.png)
+mirip kek two queue, cuma setiap event memiliki queue nya sendiri. <br/><br/>
+klo pake metode ini, kelemahan two queue gaada gara" setiap event punya queue nya sendiri, jadi klo event nya udah selesai, process nya bisa langsung keluar dari queue nya dan masuk ke ready queue dan prinsip FIFO tidak menghambat process nya buat masuk ke ready queue
+
+### Suspend States
+kan klo process nunggu buat I/O itu dimasukin ke dalam blocked queue, akan tetapi bisa saja I/O nya lama banget jadi daripada blocked queue nya sendiri juga lama, mending dimasukin saja process nya ke dalam suspend state. <br/><br/>
+suspend state itu mirip kek blocked state cuma bedaya itu suspend state itu lokasi nya di secondary memory (disk/SSD) jadi gk membebani main memory. <br/><br/>
+di dalam suspend, ada dua state baru :
+- Blocked/Suspend : process yang nunggu event dan pemindahan dari memory to storage/disk
+- Ready/Suspend : process yang siap buat di execute dan pemindahan dari storage/disk to memory
+
+#### One Suspend State
+![one-suspend-state](./resources/one-suspend-state.png)
+klo diperhatiin, ini kurleb sama persis ama (five-state-process-model)[#Five-State-Process-Model] cuma bedanya itu process yang di suspend itu di pindahin ke dalam disk/secondary memory
+
+#### Two Suspend State
+![two-suspend-state](./resources/two-suspend-state.png)
+tambahan fitur dari one suspend state cuma suspend lebih diperjelas.
+- skrng klo bikin new process, bisa langsung masukin dlm ready/suspend state
+- klo running process, bisa langsung masukin ke ready/suspend state untuk nunggu event
+- klo ada running process yg mungkin makan resource processor, bisa saja dimasukin ke ready/suspend state, yaitu artinya cuma process di taruh aja di disk/secondary memory padahal gk nunggu event, tapi pas dipindahin ke main memory, siap buat di execute
+- jadi bedannya ready/suspend state ama blocked state itu klo blocked itu terletak di main memory dan juga nunggu event. Sedangkan klo ready/suspend itu gara" process nya gk nunggu event, tapi gk di execute, jadi process nya di taruh di disk/secondary memory buat hemat resource.
+
+#### Reasons for Suspend State
+| Reason | Description |
+|--------|-------------|
+| Swapping | process di taruh ke disk buat hemat resource |
+| Alasan OS Reason | OS curiga process ini bikin masalah|
+| User Request | user minta process ini di suspend (cth breakpoint di debugging vscode)|
+| Timing | sebuah process yang di jalan secara periodic (jadi mending taruh di suspend aja buat nungguin event berikutnya) (cth: cronjob)|
+| Parent Process Request | parent process minta processor buat suspend process ini, mungkin buat modify ato koordinasi proses bersamas child proses lain, dll |
