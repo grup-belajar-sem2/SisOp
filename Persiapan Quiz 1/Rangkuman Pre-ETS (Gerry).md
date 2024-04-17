@@ -493,7 +493,7 @@ sebuah scenario dmn reader lagi baca file, terus tiba tiba writer request write 
 - writer disuruh jan write dulu
 - nunggu ampe semua reader dlm file itu selesai baca (count == 0), selagi itu controller tunggu message selesai baca dari reader, klo 1 message selesai baca, maka count di increment ampe 0
 
-cth scenario :
+cth scenario (3 reader file terus 1 writer request write file pas reader lagi baca file):
 1. Init (`count = 100`)
 2. 3 reader request baca file `(count = 100 -3 = 97`)
 3. pas reader lagi read file, ada writer yang request write (`count = 97 - 100 = -3`)
@@ -508,8 +508,15 @@ while (count != 0) {
   - Selama writer write file, controller gk baca request apapun (gk baca request read, dan gk baca request write)
 6. controller nunggu dapet message finished dari writer yg nge write file, lalu baru `count = 100` (semua process udah selesai)
 
-perlu diperhatiin itu klo 2 writer minta write file. controller admit 1 writer, terus pure nungguin writer di dalam file nya selesai. baru terima request writer 1 lagi. klo writer 1 selesai, baru writer 2 di admit
+perlu diperhatiin itu klo 2 writer minta write file. controller admit 1 writer, terus pure nungguin writer di dalam file nya selesai. baru terima request writer 1 lagi. klo writer 1 selesai, baru writer 2 di admit (liat di `juga note lagi` poin pertama)
 
 juga note lagi :
-misalkan ada 2 write request dan n (n > 0) read request, controller kasi writer prioritas paling tertinggi dulu (kasi 2 writer dulu baru kasi n reader)
-- writer-priority disini gara" layout code di controller nya, itu dia else if writer_request dulu baru else if reader_request, klo reader_request dulu sebelum writer_request maka controller itu punya reader-priority instead of writer-priority
+misalkan ada 2 write request dan n (n > 0) read request yg dateng at the same time, controller kasi writer prioritas paling tertinggi dulu (kasi 2 writer dulu baru kasi n reader)
+- writer-priority (klo reader request ama writer request dateng at the same time) disini gara" layout code di controller nya, itu dia else if writer_request dulu baru else if reader_request, klo reader_request dulu sebelum writer_request maka controller itu punya reader-priority instead of writer-priority
+- controller itu kasi prioritas paling tertinggi kepada ongoing process yg di dalam file nya (klo ada writer yg lagi write file, controller gk nerima request apapun, klo ada reader yg lagi baca file, controller gk terima request apapun ampe ongoing read nya selesai, klo gk ada yg di dalam file, controller nerima request siapapun, tapi prioritasin writer request dulu)
+- memang mungkin unlikely sih tapi klo ada 2 request at the same time soalnya udh ada scheduling algorithm dari OS
+
+cth scenario 2 (1 reader lagi baca file --> datang 1 writer request + 1 reader request at the same time):
+1. reader selesaiin baca dulu
+2. writer write file
+3. reader read file
