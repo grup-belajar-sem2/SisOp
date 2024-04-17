@@ -49,6 +49,8 @@
       - [One Suspend State](#one-suspend-state)
       - [Two Suspend State](#two-suspend-state)
       - [Reasons for Suspend State](#reasons-for-suspend-state)
+- [SEMAPHORE](#semaphore)
+- [MESSAGE PASSING](#message-passing)
 # PPT 1
 ## Basic Element 
 - Processor
@@ -446,3 +448,68 @@ tambahan fitur dari one suspend state cuma suspend lebih diperjelas.
 | User Request | user minta process ini di suspend (cth breakpoint di debugging vscode)|
 | Timing | sebuah process yang di jalan secara periodic (jadi mending taruh di suspend aja buat nungguin event berikutnya) (cth: cronjob)|
 | Parent Process Request | parent process minta processor buat suspend process ini, mungkin buat modify ato koordinasi proses bersamas child proses lain, dll |
+
+(UNFINISHED, IM SORRY)
+
+# SEMAPHORE
+klo semWait itu artinya kita mau taruh process di block queue
+
+klo semSignal itu artinya kita mau keluarin process dari block queue ke ready queue
+
+semWait decrement semaphore value dengan arti klo semaphore value nya 0, process akan di block
+
+semWait decrement artinya misal binary klo semaphore = 0 artinya itu bilang jan maju ke ready dulu
+
+semSignal increment artinya misal binary klo semaphore = 1 artinya itu bilang process yg ada di blocked queue, langsung lanjut aja
+
+di non-binary semaphore primitive
+semSignal nge cek klo itu negative numbers gk, soalnya klo negative number semaphore nya, artinya ada process yg lagi di dlm blocked queue, klo semaphore nya positif number artinya gk ada process yg di blocked queue
+
+di binary semaphore, klo semaphore = 0 di semWait, artinya sudah ada process di dalam blocked queue, jadi tinggal tambahin lagi, klo semaphore = 1, itu artinya cuma minta ganti value semaphore (suruh queue buat nge block process lagi)
+
+di binary semaphore, klo di dalam blocked queue kosong, artinya gaada process yg di queue terus ini semaphore diangkat aja jadi 1 soalnya blom ada perintah buat block process. Sedangkan klo  ada process di dalam blocked queue, itu semSignal cuma admit/unblock 1 process yg di block queue jadi masuk ke dalam ready queue.
+
+# MESSAGE PASSING
+reader-side
+ 1. reader minta request buat baca file
+ 2. dia nunggu ampe dapat msg di mailbox (klo dapet message di mailbox artinya di admit)
+ 3. baca file
+ 4. kirim ke controller klo udh selesai baca file
+
+writer-side
+1. writer minta request buat giliran write file
+2. dia nunggu ampe dapat msg di mailbox (klo dapet message di mailbox artinya di admit)
+3. write file
+4. kirim ke controller klo udh selesai write file
+
+controller-side
+note klo count itu: 
+- angka positif 100 : **blom ada yg request read/write file**
+- angka positif < 100 : **ada reader yg request baca, tapi gaada writer yg request write**
+- angka 0 : **ada writer yang request write file dan gaada reader yang read file**, gk bolehin apapun request (writer request, reader request --> semuanya diignore)
+- angka negatif : **ada reader yg request baca, ada writer yang juga request write**, writer wait dulu ampe semua reader selesai baca file
+
+sebuah scenario dmn reader lagi baca file, terus tiba tiba writer request write file :
+- writer disuruh jan write dulu
+- nunggu ampe semua reader dlm file itu selesai baca (count == 0), selagi itu controller tunggu message selesai baca dari reader, klo 1 message selesai baca, maka count di increment ampe 0
+
+cth scenario :
+1. Init (`count = 100`)
+2. 3 reader request baca file `(count = 100 -3 = 97`)
+3. pas reader lagi read file, ada writer yang request write (`count = 97 - 100 = -3`)
+4. controller sadar itu negative number, jadi minta writer buat nunggu dulu ampe controller dapet 3 message finished dari reader
+```c
+while (count != 0) {
+  semWait(writer);
+}
+```
+  4.1 ketika controller dapet 1 message finished dari reader, count di increment (`count = -3 + 1 = -2`)
+5. Ketika count = 0, artinya udh gaada reader lagi yang baca file, writer mulai write file 
+  - Selama writer write file, controller gk baca request apapun (gk baca request read, dan gk baca request write)
+6. controller nunggu dapet message finished dari writer yg nge write file, lalu baru `count = 100` (semua process udah selesai)
+
+perlu diperhatiin itu klo 2 writer minta write file. controller admit 1 writer, terus pure nungguin writer di dalam file nya selesai. baru terima request writer 1 lagi. klo writer 1 selesai, baru writer 2 di admit
+
+juga note lagi :
+misalkan ada 2 write request dan n (n > 0) read request, controller kasi writer prioritas paling tertinggi dulu (kasi 2 writer dulu baru kasi n reader)
+- writer-priority disini gara" layout code di controller nya, itu dia else if writer_request dulu baru else if reader_request, klo reader_request dulu sebelum writer_request maka controller itu punya reader-priority instead of writer-priority
